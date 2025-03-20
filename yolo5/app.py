@@ -16,10 +16,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # The correct values must be set as environment variables, these are just fallback defaults.
 S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME", "netflix.jeenge")
 SQS_QUEUE_URL = os.environ.get("SQS_QUEUE_URL", "https://sqs.eu-north-1.amazonaws.com/352708296901/itsik-netflix-events")
-AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID", "AKIAVEHYNQDC5MO5GQK7")
-AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", "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")
 AWS_REGION = os.environ.get("AWS_REGION", "eu-north-1")
-TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "7479409954:AAEfM0yr67JzXeqw2RsCpFPcWtHq6jv-pec")
 TELEGRAM_APP_URL = os.environ.get("TELEGRAM_APP_URL", "https://t.me/itsikINT2024_bot")
 MONGODB_URI = os.environ.get("MONGODB_URI", "mongodb://localhost:27017/")  # Add default for MongoDB
 POLYBOT_RESULTS_URL = os.environ.get("POLYBOT_RESULTS_URL", "http://localhost:8443/results") # Add default for POLYBOT_RESULTS_URL
