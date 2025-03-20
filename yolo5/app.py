@@ -12,15 +12,42 @@ import requests
 
 # Initialize logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+from pymongo import MongoClient
 
+# Replace with your actual database name
+database_name = "your_database_name"
+
+# Replace with your collection name.
+collection_name = "your_collection_name"
+
+# Your replica set connection string
+mongo_uri = "mongodb://127.0.0.1:27017,127.0.0.1:27018,127.0.0.1:27019/?replicaSet=rs0"
+
+try:
+    client = MongoClient(mongo_uri)
+    db = client[database_name]
+    collection = db[collection_name]
+
+    # Example: Inserting a document
+    document = {"key": "value"}
+    collection.insert_one(document)
+
+    print("Connected to MongoDB and inserted document successfully!")
+
+except Exception as e:
+    print(f"Error connecting to MongoDB: {e}")
+
+finally:
+    if 'client' in locals() and client:
+        client.close()
 # Load environment variables, with hardcoded defaults for this example only.
 # NEVER DO THIS IN REAL PRODUCTION CODE.  Use a more secure method.
 # The correct values must be set as environment variables, these are just fallback defaults.
 S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME", "netflix.jeenge")
 AWS_REGION = os.environ.get("AWS_REGION", "eu-north-1")
+MONGODB_URI = "mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.4.2"
 SQS_QUEUE_URL = os.environ.get("SQS_QUEUE_URL", "https://sqs.eu-north-1.amazonaws.com/352708296901/itsik-netflix-events")
 TELEGRAM_APP_URL = os.environ.get("TELEGRAM_APP_URL", "https://t.me/itsikINT2024_bot")
-MONGODB_URI = os.environ.get("MONGODB_URI", "mongodb://localhost:27017/")  # Add default for MongoDB
 POLYBOT_RESULTS_URL = os.environ.get("POLYBOT_RESULTS_URL", "http://localhost:8443/results") # Add default for POLYBOT_RESULTS_URL
 POLL_INTERVAL = int(os.environ.get("POLL_INTERVAL", "10"))
 DELETE_INVALID = os.environ.get("DELETE_INVALID", "False").lower() == "true"
