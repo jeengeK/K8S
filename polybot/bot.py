@@ -3,22 +3,41 @@ from loguru import logger
 import os
 import time
 from telebot.types import InputFile
+import boto3
+from botocore.exceptions import NoCredentialsError
+import json
+import requests  # Import the requests library
+import uuid  # Import uuid for generating unique IDs
+
+
+try:
+    BUCKET_NAME = os.environ.get('BUCKET_NAME')
+    SQS_URL = os.environ.get('SQS_URL')
+    TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
+    POLYBOT_RESULTS_URL = os.environ.get('POLYBOT_RESULTS_URL')  # URL to call back to PolyBot with results
+
+    if not BUCKET_NAME:
+        raise ValueError("BUCKET_NAME environment variable not set")
+    if not SQS_URL:
+        raise ValueError("SQS_URL environment variable not set")
+    if not TELEGRAM_TOKEN:
+        raise ValueError("TELEGRAM_TOKEN environment variable not set")
+    if not POLYBOT_RESULTS_URL:
+        raise ValueError("POLYBOT_RESULTS_URL environment variable not set")
+
+
+except ValueError as e:
+    raise RuntimeError(f"Missing or empty required environment variable: {e}")
+except KeyError as e:
+    raise RuntimeError(f"Missing required environment variable: {e}")
 
 
 class Bot:
 
-    def __init__(self, token, telegram_chat_url):
+    def __init__(self, token):
         # create a new instance of the TeleBot class.
         # all communication with Telegram servers are done using self.telegram_bot_client
         self.telegram_bot_client = telebot.TeleBot(token)
-
-        # remove any existing webhooks configured in Telegram servers
-        self.telegram_bot_client.remove_webhook()
-        time.sleep(0.5)
-
-        # set the webhook URL
-        self.telegram_bot_client.set_webhook(url=f'{telegram_chat_url}/{token}/', timeout=60)
-
         logger.info(f'Telegram Bot information\n\n{self.telegram_bot_client.get_me()}')
 
     def send_text(self, chat_id, text):
@@ -59,19 +78,107 @@ class Bot:
             InputFile(img_path)
         )
 
+
+    def handle_photo_message(self, msg):
+        chat_id = msg['chat']['id']
+        photo_path = self.download_user_photo(msg)
+
+        # Generate a unique prediction ID
+        prediction_id = str(uuid.uuid4())
+
+        # upload the image to S3 Bucket
+        s3 = boto3.client('s3')
+        bucket_name = BUCKET_NAME
+        # Include prediction_id in the S3 key
+        s3_image_key_upload = f'{chat_id}_{prediction_id}_teleBOT_picture.jpg'
+        try:
+            # Upload predicted image back to S3
+            s3.upload_file(str(photo_path), bucket_name, s3_image_key_upload)
+            logger.info(f"File uploaded successfully to {bucket_name}/{s3_image_key_upload}")
+        except FileNotFoundError:
+            logger.error("The file was not found.")
+            self.send_text(chat_id, "Error: Original image not found.")
+            return
+        except NoCredentialsError:
+            logger.error("AWS credentials not available.")
+            self.send_text(chat_id, "Error: AWS credentials not available.")
+            return
+        except Exception as e:
+            logger.error(f"Error uploading file: {e}")
+            self.send_text(chat_id, f"Error uploading file: {e}")
+            return
+
+
+        # send an HTTP request to the `SQS` service for prediction
+        params = {
+            "imgName": s3_image_key_upload,
+            "predictionId": prediction_id,  # Include predictionId in the SQS message
+            "chat_id": chat_id
+        }
+        sqs_client = boto3.client('sqs', region_name='eu-north-1')
+        try:
+            response = sqs_client.send_message(
+                QueueUrl=str(SQS_URL),
+                MessageBody=json.dumps(params)
+            )
+            logger.info(f"Message sent to SQS. Message ID: {response['MessageId']}")
+            self.send_text(chat_id, "Image sent for processing.  Please wait...") # Immediate feedback
+
+        except Exception as e:
+            logger.error(f"Error sending message to SQS: {e}")
+            self.send_text(chat_id, f"Error sending message to SQS: {e}")
+            return
+
+        # Removed download and send image logic.  This will be handled by Polybot callback
+
     def handle_message(self, msg):
         """Bot Main message handler"""
         logger.info(f'Incoming message: {msg}')
-        self.send_text(msg['chat']['id'], f'Your original message: {msg["text"]}')
+        if 'text' in msg:
+            self.send_text(msg['chat']['id'], f'Your original message: {msg["text"]}')
+        elif self.is_current_msg_photo(msg):
+            self.handle_photo_message(msg)
+        else:
+            self.send_text(msg['chat']['id'], "Unsupported message type")
 
 
 class ObjectDetectionBot(Bot):
+    def __init__(self):
+        super().__init__(TELEGRAM_TOKEN)
+
     def handle_message(self, msg):
         logger.info(f'Incoming message: {msg}')
 
         if self.is_current_msg_photo(msg):
-            photo_path = self.download_user_photo(msg)
+            self.handle_photo_message(msg)
+        elif 'text' in msg:
+            self.send_text(msg['chat']['id'], f"this is your message: {msg['text']}")
+        else:
+            self.send_text(msg['chat']['id'], "Unsupported message type")
 
-            # TODO upload the photo to S3
-            # TODO send a job to the SQS queue
-            # TODO send message to the Telegram end-user (e.g. Your image is being processed. Please wait...)
+
+# Main function to run the bot
+def main():
+    bot = ObjectDetectionBot()
+
+    # Delete the webhook
+    try:
+        response = requests.get(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/deleteWebhook")
+        response.raise_for_status()  # Raise an exception for bad status codes
+        logger.info(f"Webhook deleted: {response.json()}")
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error deleting webhook: {e}")
+        # Handle the error appropriately (e.g., exit the program, retry later)
+
+    # Define the message handler
+    @bot.telegram_bot_client.message_handler(func=lambda message: True)
+    def echo_all(message):
+        bot.handle_message(message.json)  # Pass the message as a dictionary
+
+    # Start the bot
+    logger.info("Bot started.  Listening for messages...")
+    bot.telegram_bot_client.infinity_polling()
+
+
+if __name__ == "__main__":
+    main()
