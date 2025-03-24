@@ -1,27 +1,23 @@
-# Use official Python runtime as base image
-FROM python:3.9-slim
+# Use official PyTorch image with CUDA support (modify if CPU is preferred)
+FROM pytorch/pytorch:1.12.1-cuda11.3-cudnn8-runtime
 
-# Set working directory
+# Set work directory
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
+RUN apt-get update && apt-get install -y \
+    libgl1-mesa-glx \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy only requirements first (optimization for caching)
-COPY requirements.txt .
+# Install Python dependencies
+COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy application files
 COPY . .
 
-# Environment variables (will be overridden by k8s config)
-ENV PYTHONUNBUFFERED=1 \
-    BUCKET_NAME="" \
-    SQS_URL="" \
-    TELEGRAM_TOKEN="" \
-    POLYBOT_RESULTS_URL=""
+# Expose necessary ports (if applicable)
+EXPOSE 5000
 
-# Run the bot
-CMD ["python", "bot.py"]
+# Set the entrypoint command
+CMD ["python", "main.py"]
