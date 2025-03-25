@@ -1,5 +1,4 @@
-# Use official PyTorch image with CUDA support (modify if CPU is preferred)
-FROM pytorch/pytorch:1.12.1-cuda11.3-cudnn8-runtime
+FROM python:3.8-slim-buster
 
 # Set work directory
 WORKDIR /app
