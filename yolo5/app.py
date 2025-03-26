@@ -67,7 +67,7 @@ except Exception as e:
     print(f"An error occurred: {e}")
 
 # MongoDB connection
-mongo_client = MongoClient('mongodb://mongodb.default.svc.cluster.local:27017/?replicaSet=rs0')
+mongo_client = MongoClient('mongodb://host.docker.internal:27017/yolo5_db')
 db = mongo_client['yolo5_db']
 predictions_collection = db['predictions']
 
