@@ -1,36 +1,41 @@
-apiVersion: v1
-kind: Pod
+# polybott-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: polybot-pod  # Name of your Pod
-  namespace: default # Or the namespace you want to create it in
-  labels:
-    app: polybot
+  name: polybott-deployment
 spec:
-  containers:
-  - name: polybot
-    image: docker.io/jeenge/polybot:2119
-    ports:
-    - containerPort: 8443
-    env:
-    - name: TELEGRAM_TOKEN
-      valueFrom:
-        secretKeyRef:
-          name: app-secrets
-          key: telegram_token
-    - name: BUCKET_NAME
-      valueFrom:
-        secretKeyRef:
-          name: app-secrets
-          key: bucket_name
-    - name: SQS_URL
-      valueFrom:
-        secretKeyRef:
-          name: app-secrets
-          key: sqs_url
-    - name: POLYBOT_RESULTS_URL
-      valueFrom:
-        secretKeyRef:
-          name: app-secrets
-          key: polybot_results_url
-  imagePullSecrets:
-  - name: dockerhub-secret
+  replicas: 1 # Adjust as needed
+  selector:
+    matchLabels:
+      app: polybott
+  template:
+    metadata:
+      labels:
+        app: polybott
+    spec:
+      containers:
+      - name: polybott
+        image: docker.io/jeenge/polybot:2119 # Explicit docker.io
+        command: ["python", "app.py"]  # ✅ FIX: Moved command to correct indentation
+        ports:
+        - containerPort: 8443 # Or whatever port your polybot app listens on
+        env:
+        - name: TELEGRAM_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: aws-secrets-manager
+              key: telegram_token
+        - name: BUCKET_NAME
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: bucket_name
+        - name: SQS_URL
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: sqs_url
+        - name: POLYBOT_RESULTS_URL
+          value: "http://itsik-k8s-project-dns.devops-int-college.com/polybott/results"
+      imagePullSecrets:
+      - name: dockerhub-secret # Points to the dockerhub-secret
