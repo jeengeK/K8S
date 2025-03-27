@@ -8,7 +8,7 @@ metadata:
 spec:
   containers:
   - name: polybot
-    image: docker.io/jeenge/polybot:ms1921
+    image: docker.io/jeenge/polybot:1921
     ports:
     - containerPort: 8443
     env:
