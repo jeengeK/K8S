@@ -19,4 +19,4 @@ COPY . .
 EXPOSE 8443
 
 # Set the entrypoint command
-CMD ["python", "main.py"]
+CMD ["python"]
