@@ -16,7 +16,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Expose necessary ports (if applicable)
-EXPOSE 5000
+EXPOSE 8443
 
 # Set the entrypoint command
 CMD ["python", "main.py"]
