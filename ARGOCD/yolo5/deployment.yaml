@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: yolo5-deployment
+  namespace: default
+  labels:
+    app: yolo5
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: yolo5
+  template:
+    metadata:
+      labels:
+        app: yolo5
+    spec:
+      containers:
+        - name: yolo5
+          image: "docker.io/jeenge/yolo5:ms1921"
+          env:
+            - name: S3_BUCKET_NAME
+              value: "netflix.jeenge"
+            - name: SQS_QUEUE_URL
+              value: "https://sqs.eu-north-1.amazonaws.com/352708296901/itsik-netflix-events"
+            - name: POLYBOT_URL
+              value: "itsik-k8s-project-dns.devops-int-college.com"
+            - name: AWS_REGION
+              value: "eu-north-1"

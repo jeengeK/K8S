@@ -1,0 +1,19 @@
+# polybott-ingress.yaml (modify this file)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: polybott-ingress
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  rules:
+  - host: itsik-k8s-project-dns.devops-int-college.com
+    http:
+      paths:
+      - path: /polybott
+        pathType: Prefix
+        backend:
+          service:
+            name: polybott-service
+            port:
+              number: 8443
