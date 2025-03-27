@@ -1,40 +1,36 @@
-# polybott-deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: v1
+kind: Pod
 metadata:
-  name: polybott-deployment
+  name: polybot-pod  # Name of your Pod
+  namespace: default # Or the namespace you want to create it in
+  labels:
+    app: polybot
 spec:
-  replicas: 1 # Adjust as needed
-  selector:
-    matchLabels:
-      app: polybott
-  template:
-    metadata:
-      labels:
-        app: polybott
-    spec:
-      containers:
-      - name: polybott
-        image: docker.io/jeenge/polybot:latest # Explicit docker.io
-        ports:
-        - containerPort: 8443 # Or whatever port your polybot app listens on
-        env:
-        - name: TELEGRAM_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: aws-secrets-manager
-              key: telegram_token # Corrected key name (removed the colon)
-        - name: BUCKET_NAME
-          valueFrom:
-            secretKeyRef:
-              name: app-secrets
-              key: bucket_name
-        - name: SQS_URL
-          valueFrom:
-            secretKeyRef:
-              name: app-secrets
-              key: sqs_url
-        - name: POLYBOT_RESULTS_URL
-          value: "http://itsik-k8s-project-dns.devops-int-college.com/polybott/results" # Hardcoded URL
-      imagePullSecrets:
-      - name: dockerhub-secret # Points to the dockerhub-secret
+  containers:
+  - name: polybot
+    image: docker.io/jeenge/polybot:ms1921
+    ports:
+    - containerPort: 8443
+    env:
+    - name: TELEGRAM_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: app-secrets
+          key: telegram_token
+    - name: BUCKET_NAME
+      valueFrom:
+        secretKeyRef:
+          name: app-secrets
+          key: bucket_name
+    - name: SQS_URL
+      valueFrom:
+        secretKeyRef:
+          name: app-secrets
+          key: sqs_url
+    - name: POLYBOT_RESULTS_URL
+      valueFrom:
+        secretKeyRef:
+          name: app-secrets
+          key: polybot_results_url
+  imagePullSecrets:
+  - name: dockerhub-secret
