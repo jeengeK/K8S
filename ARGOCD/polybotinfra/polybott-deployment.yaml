@@ -36,6 +36,6 @@ spec:
               name: app-secrets
               key: sqs_url
         - name: POLYBOT_RESULTS_URL
-          value: "http://itsik-k8s-project-dns.devops-int-college.com/polybott/results"
+          value: "polybott-service:8443"
       imagePullSecrets:
       - name: dockerhub-secret # Points to the dockerhub-secret
