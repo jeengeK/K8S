@@ -24,6 +24,6 @@ spec:
             - name: SQS_QUEUE_URL
               value: "https://sqs.eu-north-1.amazonaws.com/352708296901/itsik-netflix-events"
             - name: POLYBOT_URL
-              value: "itsik-k8s-project-dns.devops-int-college.com"
+              value: "polybott-service:8443"
             - name: AWS_REGION
               value: "eu-north-1"
