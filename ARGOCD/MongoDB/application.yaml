@@ -7,7 +7,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/jeengeK/K8S
-    path: k8s/MongoDB
+    path: K8S/ARGOCD/MongoDB
   destination:
     server: https://kubernetes.default.svc
     namespace: mongodb

@@ -1,4 +1,3 @@
-# polybott-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -36,6 +35,6 @@ spec:
               name: app-secrets
               key: sqs_url
         - name: POLYBOT_RESULTS_URL
-          value: "polybott-service:8443"
+          value: "https://polybott-service:8443"
       imagePullSecrets:
       - name: dockerhub-secret # Points to the dockerhub-secret
