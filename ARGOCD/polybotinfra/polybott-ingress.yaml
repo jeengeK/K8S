@@ -5,15 +5,14 @@ metadata:
   namespace: default # Assuming your polybot-service is in the default namespace
   annotations:
     kubernetes.io/ingress.class: "nginx"
-    # Optional: Add TLS configuration if you want HTTPS
-    # kubernetes.io/tls-acme: "true" # If using cert-manager for automatic TLS
-    # cert-manager.io/issuer: "letsencrypt-prod"
+    # Enable TLS termination
+    kubernetes.io/tls-acme: "true" # If using cert-manager for automatic TLS
+    cert-manager.io/issuer: "letsencrypt-prod" # Or your preferred cert-manager issuer
 spec:
-  # Optional: TLS configuration
-  # tls:
-  # - hosts:
-  #   - your-domain.com
-  #   secretName: polybott-tls
+  tls:
+  - hosts:
+    - itsik-k8s-project-dns.devops-int-college.com
+    secretName: polybott-tls # Kubernetes Secret to store the TLS certificate
 
   rules:
   - host: itsik-k8s-project-dns.devops-int-college.com
