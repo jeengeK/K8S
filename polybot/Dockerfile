@@ -15,6 +15,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application files
 COPY . .
 
+# OR
+
+RUN pip install Flask  # If you don't have a requirements.txt
+
 # Expose necessary ports (if applicable)
 EXPOSE 8443
 
