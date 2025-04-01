@@ -159,7 +159,8 @@ def process_sqs_message():
 def send_results_to_polybot(prediction_id, chat_id):
     """Send the processed results to Polybot's /results endpoint."""
     try:
-        response = requests.post(polybot_url, json={"predictionId": prediction_id, "chat_id": chat_id})
+        #response = requests.post(polybot_url, json={"predictionId": prediction_id, "chat_id": chat_id})
+        requests.post(f'http://svc-polybot:8443/results?predictionId={prediction_id}')
         if response.status_code == 200:
             logging.info(f"Results sent to Polybot for chat_id {chat_id}")
         else:

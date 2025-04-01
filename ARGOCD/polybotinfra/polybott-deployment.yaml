@@ -35,6 +35,6 @@ spec:
               name: app-secrets
               key: sqs_url
         - name: POLYBOT_RESULTS_URL
-          value: "http://polybott-service:8443/results"
+          value: "http://svc-polybot:8443/results"
       imagePullSecrets:
       - name: dockerhub-secret # Points to the dockerhub-secret
