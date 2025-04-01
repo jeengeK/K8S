@@ -2,18 +2,15 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: mongodb-init
-  namespace: default  # Use the correct namespace where MongoDB is deployed
+  namespace: mongodb
 spec:
   template:
     spec:
       containers:
-        - name: mongo-init
-          image: mongo:6.0
-          command:
-            - "sh"
-            - "-c"
-            - |
-              # MongoDB initialization logic
-              # Example: creating a user or preloading data
-              mongo --host mongodb:27017 --eval "db.createUser({user: 'admin', pwd: 'password', roles: ['root']})"
-      restartPolicy: OnFailure
+      - name: mongo-init
+        image: mongo:6.0
+        command:
+          - "sh"
+          - "-c"
+          - "until mongo --eval 'print(\"waited for connection\")'; do sleep 2; done"
+      restartPolicy: Never
