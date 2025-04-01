@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mongo
+  namespace: argocd  # Ensure Argo CD is installed in this namespace or change accordingly
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/jeengeK/K8S.git'  # Your GitHub repository URL
+    targetRevision: main  # The branch or tag you want to sync from
+    path: 'ARGOCD/MongoDB'  # The folder path inside your repo containing MongoDB YAML files
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: default  # The namespace where you want MongoDB deployed (change to your namespace)
+  syncPolicy:
+    automated:
+      prune: true  # Automatically delete resources no longer defined in the Git repo
+      selfHeal: true  # Automatically fix any drift from the desired state
