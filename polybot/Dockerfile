@@ -1,26 +1,10 @@
-FROM python:3.8-slim-buster
+FROM python:3.9-slim-buster
 
-# Set work directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
-    && rm -rf /var/lib/apt/lists/*
+COPY requirements.txt .
+RUN pip install -r requirements.txt --no-cache-dir
 
-# Install Python dependencies
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+COPY app.py .
 
-# Copy application files
-COPY . .
-
-# OR
-
-RUN pip install Flask  # If you don't have a requirements.txt
-
-# Expose necessary ports (if applicable)
-EXPOSE 8443
-
-# Set the entrypoint command
-CMD ["python"]
+CMD ["python", "app.py"]
