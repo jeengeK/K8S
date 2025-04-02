@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: polybott-deployment
+  name: polybot-deployment
 spec:
   replicas: 1 # Adjust as needed
   selector:
     matchLabels:
-      app: polybott
+      app: polybot
   template:
     metadata:
       labels:
-        app: polybott
+        app: polybot
     spec:
       containers:
-      - name: polybott
-        image: docker.io/jeenge/polybot:5 # Explicit docker.io
+      - name: polybot
+        image: docker.io/jeenge/polybot:21 # Explicit docker.io
         command: ["python", "app.py"]  # ✅ FIX: Moved command to correct indentation
         ports:
         - containerPort: 8443 # Or whatever port your polybot app listens on

@@ -1,0 +1,21 @@
+# polybot-ingress.yaml (example with /bot path and svc-polybot)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: polybot-ingress
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  rules:
+  - host: itsik-k8s-project-dns.devops-int-college.com
+    http:
+      paths:
+      - path: /bot(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: svc-polybot
+            port:
+              number: 8443
