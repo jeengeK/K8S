@@ -42,4 +42,4 @@ spec:
         resources:
           requests:
             storage: 1Gi
-        storageClassName: mongodb-storage  # Updated to match your cluster
+        storageClassName: mongodb-storage  # Matches your cluster
