@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: polybot
-        image: docker.io/jeenge/polybot:21 # Explicit docker.io
+        image: docker.io/jeenge/polybot:5 # Explicit docker.io
         command: ["python", "app.py"]  # ✅ FIX: Moved command to correct indentation
         ports:
         - containerPort: 8443 # Or whatever port your polybot app listens on
