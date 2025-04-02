@@ -5,7 +5,7 @@ metadata:
   namespace: mongodb  # Or your desired namespace
 spec:
   serviceName: mongodb
-  replicas: 3
+  replicas: 1  # For simplicity, starting with 1 replica
   selector:
     matchLabels:
       app: mongodb
@@ -14,56 +14,6 @@ spec:
       labels:
         app: mongodb
     spec:
-      initContainers:
-      - name: mongo-init
-        image: mongo:latest  # Or your preferred MongoDB image
-        command:
-        - bash
-        - -c
-        - |
-          set -e
-          echo "Initializing MongoDB Replica Set..."
-          # Wait for the MongoDB instances to be ready
-          sleep 10
-          # Get the list of MongoDB hosts
-          MONGODB_HOSTS=$(seq 0 $((${#MONGODB_REPLICAS}-1)))
-          MONGODB_HOSTS=$(echo $MONGODB_HOSTS | sed 's/ / mongodb-$(printf "%02d" $REPLICA_INDEX).mongodb.$(cat /etc/resolv.conf | grep search | awk '{print $2}'):27017,/g')
-          MONGODB_HOSTS=${MONGODB_HOSTS%,*}
-          echo "MongoDB Hosts: $MONGODB_HOSTS"
-
-          # Initialize the Replica Set if it's the first pod
-          if [[ $(hostname -s) == "mongodb-0" ]]; then
-            echo "Initializing Replica Set..."
-            mongo --host mongodb-0:27017 --eval "rs.initiate({ _id: '$MONGODB_REPLICA_SET_NAME', members: [ { _id: 0, host: 'mongodb-0:27017' } ] })"
-            sleep 5
-            # Add other members
-            for i in $(seq 1 $((${#MONGODB_REPLICAS}-1))); do
-              mongo --host mongodb-0:27017 --eval "rs.add('mongodb-$(printf "%02d" $i):27017')"
-              sleep 2
-            done
-            echo "Replica Set initialized."
-          else
-            echo "Joining Replica Set..."
-            # Wait for the primary to be available
-            until mongo --host mongodb-0:27017 --eval "rs.status().ok"; do
-              echo "Waiting for primary..."
-              sleep 5
-            done
-            mongo --host mongodb-0:27017 --eval "rs.add('mongodb-$(hostname -s).mongodb.$(cat /etc/resolv.conf | grep search | awk '{print $2}'):27017')"
-            echo "Joined Replica Set."
-          fi
-        env:
-        - name: MONGODB_REPLICA_SET_NAME
-          value: rs0 # Replace with your desired Replica Set name
-        - name: MONGODB_REPLICAS
-          value: "3" # Should match the replicas in the StatefulSet
-        - name: REPLICA_INDEX
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.labels['statefulset.kubernetes.io/pod-index']
-        volumeMounts:
-        - name: mongodb-data
-          mountPath: /data/db
       containers:
       - name: mongodb
         image: mongo:latest  # Or your preferred MongoDB image
@@ -79,4 +29,4 @@ spec:
       accessModes: [ "ReadWriteOnce" ]
       resources:
         requests:
-          storage: 10Gi # Adjust storage request as needed
+          storage: 1Gi # Adjust storage request as needed
