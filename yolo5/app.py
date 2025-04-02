@@ -24,7 +24,7 @@ aws_region = os.getenv("AWS_REGION", "eu-north-1")
 sqs_queue_url = os.getenv("SQS_QUEUE_URL")
 s3_bucket_name = os.getenv("S3_BUCKET_NAME")
 mongo_connection_string = os.getenv("MONGO_CONNECTION_STRING")  # Changed variable name
-polybot_url = os.getenv("POLYBOT_URL", "http://polybott-service:8443")
+polybot_url = os.getenv("POLYBOT_URL", "http://svc-polybot:8443/results")
 
 logging.info(f"Value of MONGO_CONNECTION_STRING from environment: '{mongo_connection_string}'") # Updated log
 
