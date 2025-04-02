@@ -78,7 +78,7 @@ except Exception as e:
 
 
 # MongoDB connection
-mongo_client = MongoClient('mongodb://mongodb:27017')
+mongo_client = MongoClient('mongodb://mongodb-service.default.svc.cluster.local:27017')
 db = mongo_client['yolo5_db']
 predictions_collection = db['predictions']
 

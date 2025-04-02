@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: yolo5
-          image: "docker.io/jeenge/yolo5:22"
+          image: "docker.io/jeenge/yolo5:i85"
           env:
             - name: S3_BUCKET_NAME
               value: "netflix.jeenge"
@@ -26,6 +26,6 @@ spec:
             - name: POLYBOT_URL
               value: "http://svc-polybot:8443/results"
             - name: MONGO_URI
-              value: "mongodb://mongodb:27017"
+              value: "mongodb://mongodb-service.default.svc.cluster.local:27017"
             - name: AWS_REGION
               value: "eu-north-1"
