@@ -156,11 +156,15 @@ def process_sqs_message():
             logging.info("No messages in the queue. Waiting...")
 
 
+import requests
+import logging
+
 def send_results_to_polybot(prediction_id, chat_id):
     """Send the processed results to Polybot's /results endpoint."""
+    polybot_url = f'http://svc-polybot:8443/results'
+    payload = {"predictionId": prediction_id, "chat_id": chat_id}
     try:
-        #response = requests.post(polybot_url, json={"predictionId": prediction_id, "chat_id": chat_id})
-        requests.post(f'http://polybott-service:8443/results?predictionId={prediction_id}')
+        response = requests.post(polybot_url, json=payload)
         if response.status_code == 200:
             logging.info(f"Results sent to Polybot for chat_id {chat_id}")
         else:
