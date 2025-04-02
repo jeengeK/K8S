@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/jeengeK/K8S.git  # Replace with your Git repo URL
     targetRevision: main  # Branch or tag to sync from
-    path: K8S/ARGOCD  # Directory in the repo containing the MongoDB YAML files
+    path: ARGOCD/MongoDB  # Directory in the repo containing the MongoDB YAML files
   destination:
     server: https://kubernetes.default.svc  # In-cluster Kubernetes API server
     namespace: default  # Namespace where MongoDB will be deployed
