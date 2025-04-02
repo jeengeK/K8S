@@ -23,7 +23,7 @@ aws_region = os.getenv("AWS_REGION", "eu-north-1")
 sqs_queue_url = os.getenv("SQS_QUEUE_URL")
 s3_bucket_name = os.getenv("S3_BUCKET_NAME")
 mongo_uri = os.getenv("MONGO_URI")
-polybot_url = os.getenv("POLYBOT_URL", "http://polybott-service:8443")
+polybot_url = os.getenv("POLYBOT_URL", f'http://svc-polybot:8443/results')
 
 # Initialize AWS clients
 sqs = boto3.client(
