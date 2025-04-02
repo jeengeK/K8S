@@ -1,12 +1,14 @@
+# Deploy mongodb
+# Statefulset allows for persistence of previous pods metadata
+# Statefulset is used here for persistent storage and DNS FQDNs
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: mongodb
-  namespace: mongodb
-  #annotations:
-    #rgocd.argoproj.io/sync-wave: "2"
+  name: mongodb-statefulset
+  labels:
+    app: mongodb
 spec:
-  serviceName: "mongodb"
+  serviceName: "mongodb-service" # Specifies the service to use
   replicas: 3
   selector:
     matchLabels:
@@ -17,24 +19,25 @@ spec:
         app: mongodb
     spec:
       containers:
-        - name: mongodb
+        - name: mongodb-instance
           image: mongo:5
           command:
             - mongod
-            - "--bind_ip_all"
             - "--replSet"
-            - "rs0"
-          ports:
-            - containerPort: 27017
+            - mongo_rs
+            - "--bind_ip_all"
+            - "--port"
+            - "27017"
           volumeMounts:
-            - name: data
+            - name: mongodb-storage
               mountPath: /data/db
   volumeClaimTemplates:
+    # Allow storage persistence of pods, thanks to created SC
     - metadata:
-        name: data
+        name: mongodb-storage
       spec:
         accessModes: [ "ReadWriteOnce" ]
-        storageClassName: mongodb-storage
         resources:
           requests:
-            storage: 10Gi
+            storage: 1G
+        storageClassName: gp3-storage

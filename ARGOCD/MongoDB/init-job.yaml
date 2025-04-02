@@ -1,55 +1,31 @@
+# Init mongodb replica-set in a newly-deployed cluster !
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: mongodb-init
-  namespace: mongodb
+  name: mongodb-init-job
+  labels:
+    app: mongodb
 spec:
   template:
+    metadata:
+      labels:
+        app: mongodb
     spec:
       containers:
-        - name: mongodb-init
-          image: mongo:5
-          command:
-            - bash
-            - -c
-            - |
-              set -e
-              echo "Waiting for all MongoDB pods to be ready..."
-              for host in mongodb-0.mongodb.mongodb.svc.cluster.local mongodb-1.mongodb.mongodb.svc.cluster.local mongodb-2.mongodb.mongodb.svc.cluster.local; do
-                for i in {1..30}; do
-                  if mongo --host "$host" --eval "db.runCommand({ping: 1})" &>/dev/null; then
-                    echo "$host is ready"
-                    break
-                  fi
-                  echo "Retrying connection to $host... ($i/30)"
-                  sleep 5
-                  if [ $i -eq 30 ]; then
-                    echo "Timeout waiting for $host"
-                    exit 1
-                  fi
-                done
-              done
-              echo "Checking if replica set is initialized..."
-              STATUS=$(mongo --host mongodb-0.mongodb.mongodb.svc.cluster.local --eval "rs.status().ok" | tail -n1)
-              if [ "$STATUS" != "1" ]; then
-                echo "Replica set not initialized. Initializing now..."
-                mongo --host mongodb-0.mongodb.mongodb.svc.cluster.local --eval '
-                  var result = rs.initiate({
-                    _id: "rs0",
-                    members: [
-                      {_id: 0, host: "mongodb-0.mongodb.mongodb.svc.cluster.local:27017"},
-                      {_id: 1, host: "mongodb-1.mongodb.mongodb.svc.cluster.local:27017"},
-                      {_id: 2, host: "mongodb-2.mongodb.mongodb.svc.cluster.local:27017"}
-                    ]
-                  });
-                  if (result.ok !== 1) {
-                    print("Initialization failed: " + result.errmsg);
-                    exit(1);
-                  }
-                  print("Replica set initialized successfully");
-                '
-              else
-                echo "Replica set is already initialized. Skipping initialization."
-              fi
-              echo "Replica set setup completed."
-      restartPolicy: OnFailure
+      - name: mongodb-instance
+        image: mongo:5
+        command:
+          - "mongosh"
+          - "--host"
+          - "mongodb-statefulset-0.mongodb-service"
+          - "--eval"
+          - "rs.initiate({
+             _id: \"mongo_rs\",
+             members: [
+                { _id: 0, host: 'mongodb-statefulset-0.mongodb-service:27017', priority: 2 },
+                { _id: 1, host: 'mongodb-statefulset-1.mongodb-service:27017', priority: 1 },
+                { _id: 2, host: 'mongodb-statefulset-2.mongodb-service:27017', priority: 1 }
+              ]
+            })"
+      restartPolicy: Never
+  backoffLimit: 3
