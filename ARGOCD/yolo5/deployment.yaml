@@ -25,6 +25,7 @@ spec:
               value: "https://sqs.eu-north-1.amazonaws.com/352708296901/itsik-netflix-events"
             - name: POLYBOT_URL
               value: "http://svc-polybot:8443/results"
-            - { name: MONGO_URI, value: "mongodb://mongodb.mongodb.svc.cluster.local:27017" }
+            - name: MONGO_URI
+              value: "mongodb://mongodb:27017"
             - name: AWS_REGION
               value: "eu-north-1"
