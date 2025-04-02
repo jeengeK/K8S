@@ -2,9 +2,10 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: mongo
+  namespace: default
 spec:
   serviceName: mongo-service
-  replicas: 1  # Single instance; increase for replica sets
+  replicas: 1
   selector:
     matchLabels:
       app: mongo
@@ -41,4 +42,4 @@ spec:
         resources:
           requests:
             storage: 1Gi
-        storageClassName: standard  # Replace with your cluster's storage class
+        storageClassName: mongodb-storage  # Updated to match your cluster
