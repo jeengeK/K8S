@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mongo-app
+  namespace: argocd  # ArgoCD is typically installed in this namespace
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/jeengeK/K8S.git  # Replace with your Git repo URL
+    targetRevision: main  # Branch or tag to sync from
+    path: K8S/ARGOCD  # Directory in the repo containing the MongoDB YAML files
+  destination:
+    server: https://kubernetes.default.svc  # In-cluster Kubernetes API server
+    namespace: default  # Namespace where MongoDB will be deployed
+  syncPolicy:
+    automated:  # Automatically sync changes from Git
+      prune: true  # Remove resources that are no longer in Git
+      selfHeal: true  # Reconcile cluster state with Git if manual changes are made
+    syncOptions:
+      - CreateNamespace=true  # Create the namespace if it doesn’t exist
