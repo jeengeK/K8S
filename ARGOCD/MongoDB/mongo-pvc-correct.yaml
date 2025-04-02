@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-pvc
+  namespace: default
+  labels:
+    app.kubernetes.io/instance: mongo-app  # Keep your labels if needed
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi  # Use the storage size you need
+  storageClassName: mongodb-storage  # Ensure this is correct
