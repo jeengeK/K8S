@@ -236,12 +236,7 @@ class Bot:
           return
 
 
-
-
       # Removed download and send image logic.  This will be handled by Polybot callback
-
-
-
 
   def handle_message(self, msg):
       """Bot Main message handler"""
