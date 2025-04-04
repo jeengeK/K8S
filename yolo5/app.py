@@ -23,9 +23,8 @@ aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
 aws_region = os.getenv("AWS_REGION", "eu-north-1")
 sqs_queue_url = os.getenv("SQS_QUEUE_URL")
 s3_bucket_name = os.getenv("S3_BUCKET_NAME")
-mongo_connection_string = os.getenv("mongodb://mongodb:27017")  # Changed variable name
+mongo_connection_string = os.getenv("MONGO_CONNECTION_STRING")
 polybot_url = os.getenv("POLYBOT_URL", "http://svc-polybot:8443/results")
-
 logging.info(f"Value of MONGO_CONNECTION_STRING from environment: '{mongo_connection_string}'") # Updated log
 
 # Initialize AWS clients
@@ -44,7 +43,7 @@ s3 = boto3.client(
 )
 
 # MongoDB connection
-mongo_client = MongoClient(mongo_connection_string) if mongo_connection_string else MongoClient('mongodb://mongodb:27017')
+mongo_client = MongoClient(mongo_connection_string) if mongo_connection_string else MongoClient('mongodb://mongodb-service.default.svc.cluster.local:27017/')
 db = mongo_client['yolo5_db']
 predictions_collection = db['predictions']
 
