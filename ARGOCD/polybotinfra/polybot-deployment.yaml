@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: polybot
-          image: jeenge/polybot:v1.1.9
+          image: jeenge/polybot:v1.1.12
           command:
             - python
             - app.py
