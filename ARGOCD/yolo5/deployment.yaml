@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: yolo5
-          image: "docker.io/jeenge/yolo5:i33"
+          image: docker.io/jeenge/yolo5:53f70f6b0b5f1874ca50ba1e51a3bb4899f33933
           env:
             - name: S3_BUCKET_NAME
               value: "netflix.jeenge"
