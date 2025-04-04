@@ -1,62 +1,60 @@
-name: Deploy Polybot to Argo CD
+name: Deploy Polybot (Argo CD)
 
 on:
   push:
     branches:
-      - main
+      - main # Or your main branch
     paths:
-      - 'polybot/**'
-      - 'ARGOCD/polybotinfra/polybot-deployment.yaml' # Trigger on changes to the deployment manifest as well
+      - 'polybotinfra/**' # Only trigger when changes are in the polybotinfra folder.
+  issue_comment:
+    types: [created]
 
 permissions:
   contents: write # Grant write permission to the repository contents
 
 jobs:
-  build_and_deploy:
+  build_and_push:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
         with:
-          token: ${{ secrets.REPO_TOKEN }}  # Required for pushing changes
+          token: ${{ secrets.REPO_TOKEN }} # Use REPO_TOKEN instead of GITHUB_TOKEN
 
-      - name: Install Dependencies
-        run: |
-          sudo apt-get update && sudo apt-get install -y yq
+      - name: Check if comment triggers workflow
+        if: github.event_name == 'issue_comment'
+        run: echo "Workflow triggered by a comment."
 
       - name: Set up Docker Buildx
+        if: github.event_name == 'push'
         uses: docker/setup-buildx-action@v3
 
       - name: Login to Docker registry
+        if: github.event_name == 'push'
         uses: docker/login-action@v3
         with:
-          registry: docker.io
+          registry: docker.io # Or your registry
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-      - name: Build and push image
-        run: |
-          cd polybot
-          IMAGE_NAME=$DOCKERHUB_USERNAME/polybot:v1.1.${{ github.run_number }}
-          docker build --push -t $IMAGE_NAME .
-          echo "image build and pushed: $IMAGE_NAME"
+      - name: Build and push Polybot Docker image
+        if: github.event_name == 'push'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./polybotinfra # Path to your Polybot Dockerfile (adjust if needed)
+          push: true
+          tags: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/polybot:${{ github.sha }}
 
       - name: Update Argo CD Image Tag
         if: github.event_name == 'push'
         run: |
-          IMAGE_NAME=$DOCKERHUB_USERNAME/polybot:${{ github.run_number }}
-          yq -i ".spec.template.spec.containers[0].image = \"$IMAGE_NAME\"" ARGOCD/polybotinfra/polybot-deployment.yaml
-          echo "Updated Argo CD deployment manifest with image: $IMAGE_NAME"
+          sed -i "s|image: .*|image: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/polybot:${{ github.sha }}|g" ARGOCD/polybotinfra/polybot-deployment.yaml # Corrected path
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "GitHub Actions"
+          git add ARGOCD/polybotinfra/polybot-deployment.yaml # Corrected path
+          git commit -m "Update Polybot image tag to ${{ github.sha }}"
+          git push origin HEAD:${{ github.ref_name }} # Push changes to the same branch.
 
-      - name: Commit and Push changes to Argo CD Repo
-        run: |
-          git config --local user.email "github-actions@github.com"
-          git config --local user.name "GitHub Actions"
-          git add ARGOCD/polybotinfra/polybot-deployment.yaml
-          git commit -m "Update Polybot image to $IMAGE_NAME"
-          git push origin HEAD:${{ github.ref_name }} # Push to the same branch that triggered the workflow
-          echo "Pushed updated Argo CD manifest"
-
-      - name: List Argo CD Manifest Contents
+      - name: List directory contents
         if: github.event_name == 'push'
-        run: ls -al ARGOCD/polybotinfra/
+        run: ls -al ARGOCD/polybotinfra/ # Replace with the directory containing your yaml.
