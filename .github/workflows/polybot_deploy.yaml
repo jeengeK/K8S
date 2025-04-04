@@ -7,6 +7,9 @@ on:
     paths:
       - 'polybot/**' # Only trigger when changes are in the polybot folder.
 
+permissions:
+  contents: write # Grant write permission to the repository contents
+
 jobs:
   build_and_push:
     runs-on: ubuntu-latest
@@ -31,13 +34,16 @@ jobs:
         with:
           context: ./polybot # Path to your Polybot Dockerfile
           push: true
-          tags: docker.io/${{ secrets.DOCKER_USERNAME }}/polybot:${{ github.sha }}
+          tags: docker.io/${{ secrets.DOCKER_USERNAME }}/polybot:${{ github.sha }} # Tag with commit SHA
 
       - name: Update Argo CD Image Tag
         run: |
-          sed -i "s|image: .*|image: docker.io/${{ secrets.DOCKER_USERNAME }}/polybot:${{ github.sha }}|g" ./k8s/polybot-deployment.yaml #Replace with your correct path and filename.
+          sed -i "s|image: .*|image: docker.io/${{ secrets.DOCKER_USERNAME }}/polybot:${{ github.sha }}|g" ARGOCD/polybot/deployment.yaml # Adjust path if needed
           git config --global user.email "github-actions@github.com"
           git config --global user.name "GitHub Actions"
-          git add ./k8s/polybot-deployment.yaml #Replace with your correct path and filename.
+          git add ARGOCD/polybot/deployment.yaml # Adjust path if needed
           git commit -m "Update Polybot image tag to ${{ github.sha }}"
           git push origin HEAD:${{ github.ref_name }} # Push changes to the same branch.
+
+      - name: List directory contents
+        run: ls -al ARGOCD/polybot/ # Adjust path if needed

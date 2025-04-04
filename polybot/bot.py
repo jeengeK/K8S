@@ -37,6 +37,8 @@ except KeyError as e:
    raise RuntimeError(f"Missing required environment variable: {e}")
 
 
+def is_current_msg_photo(msg):
+    return 'photo' in msg
 
 
 class Bot:
@@ -56,17 +58,12 @@ class Bot:
    def send_text_with_quote(self, chat_id, text, quoted_msg_id):
        self.telegram_bot_client.send_message(chat_id, text, reply_to_message_id=quoted_msg_id)
 
-
-   def is_current_msg_photo(self, msg):
-       return 'photo' in msg
-
-
    def download_user_photo(self, msg):
        """
        Downloads the photos that sent to the Bot to `photos` directory (should be existed)
        :return:
        """
-       if not self.is_current_msg_photo(msg):
+       if not is_current_msg_photo(msg):
            raise RuntimeError(f'Message content of type \'photo\' expected')
 
 
@@ -163,7 +160,7 @@ class Bot:
        logger.info(f'Incoming message: {msg}')
        if 'text' in msg:
            self.send_text(msg['chat']['id'], f'Your original message: {msg["text"]}')
-       elif self.is_current_msg_photo(msg):
+       elif is_current_msg_photo(msg):
            self.handle_photo_message(msg)
        else:
            self.send_text(msg['chat']['id'], "Unsupported message type")
@@ -180,7 +177,7 @@ class ObjectDetectionBot(Bot):
        logger.info(f'Incoming message: {msg}')
 
 
-       if self.is_current_msg_photo(msg):
+       if is_current_msg_photo(msg):
            self.handle_photo_message(msg)
        elif 'text' in msg:
            self.send_text(msg['chat']['id'], f"this is your message: {msg['text']}")
