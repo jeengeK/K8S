@@ -1,4 +1,4 @@
-name: Deploy YOLO5
+name: YOLO5 CI/CD
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
       - 'yolo5/**' # Only trigger when changes are in the yolo5 folder.
 
 jobs:
-  deploy:
+  build_and_deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -46,4 +46,4 @@ jobs:
       - name: Update Kubernetes Deployment Image
         run: |
           kubectl set image deployment/yolo5-deployment yolo5=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/yolo5:${{ github.sha }} -n default
-        working-directory: ./k8s # if your yolo5 deployment file is in a k8s folder.
+        working-directory: ./k8s # if your deployment yaml file is in the k8s directory.
