@@ -28,4 +28,4 @@ spec:
             - name: AWS_REGION
               value: "eu-north-1"
             - name: MONGO_CONNECTION_STRING
-              value: "mongodb://mongodb-service.default.svc.cluster.local:27017/"
+              value: "mongodb://mongo-service.default.svc.cluster.local:27017/"
