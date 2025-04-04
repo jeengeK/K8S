@@ -313,7 +313,7 @@ def main():
 
   # Delete the webhook
   try:
-      response = requests.get(f"https://api.telegam.org/bot{TELEGRAM_TOKEN}/deleteWebhook")
+      response = requests.get(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/deleteWebhook")
       response.raise_for_status()  # Raise an exception for bad status codes
       logger.info(f"Webhook deleted: {response.json()}")
   except requests.exceptions.RequestException as e:
