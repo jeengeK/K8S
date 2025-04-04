@@ -5,7 +5,7 @@ on:
     branches:
       - main # Or your main branch
     paths:
-      - 'polybotinfra/**' # Only trigger when changes are in the polybotinfra folder.
+      - 'polybot/**' # Only trigger when changes are in the polybot folder.
   issue_comment:
     types: [created]
 
