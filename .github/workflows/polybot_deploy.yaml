@@ -26,24 +26,24 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: docker.io # Or your registry
-          username: ${{ secrets.DOCKERHUB_USERNAME }} # Ensure this secret exists
-          password: ${{ secrets.DOCKERHUB_PASSWORD }} # Ensure this secret exists
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./polybot # Path to your Polybot Dockerfile
+          context: ./polybot # Path to your Polybot Dockerfile (adjust if needed)
           push: true
-          tags: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/polybot:${{ github.sha }} # Tag with commit SHA
+          tags: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/polybot:${{ github.sha }}
 
       - name: Update Argo CD Image Tag
         run: |
-          sed -i "s|image: .*|image: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/polybot:${{ github.sha }}|g" ARGOCD/polybot/deployment.yaml # Adjust path if needed
+          sed -i "s|image: .*|image: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/polybot:${{ github.sha }}|g" ARGOCD/polybot/deployment.yaml # Corrected path
           git config --global user.email "github-actions@github.com"
           git config --global user.name "GitHub Actions"
-          git add ARGOCD/polybot/deployment.yaml # Adjust path if needed
+          git add ARGOCD/polybot/deployment.yaml # Corrected path
           git commit -m "Update Polybot image tag to ${{ github.sha }}"
           git push origin HEAD:${{ github.ref_name }} # Push changes to the same branch.
 
       - name: List directory contents
-        run: ls -al ARGOCD/polybot/ # Adjust path if needed
+        run: ls -al ARGOCD/polybot/ # Replace with the directory containing your yaml.
