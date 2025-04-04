@@ -1,5 +1,4 @@
 name: Deploy Polybot (Argo CD)
-
 on:
   push:
     branches:
