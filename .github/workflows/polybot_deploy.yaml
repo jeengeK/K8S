@@ -47,9 +47,3 @@ jobs:
 
       - name: List directory contents
         run: ls -al ARGOCD/polybotinfra/ # Adjust path if needed
-
-      # Optional: Debug secrets (remove after troubleshooting)
-      - name: Debug Secrets
-        run: |
-          echo "Checking for DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME != '' && 'Present' || 'Not Present' }}"
-          echo "Checking for DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD != '' && 'Present' || 'Not Present' }}"
