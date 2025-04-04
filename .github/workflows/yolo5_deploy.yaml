@@ -42,7 +42,7 @@ jobs:
         run: |
           cd yolo5
           echo "DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}"
-          IMAGE_NAME=$DOCKERHUB_USERNAME/yolo5:${{ github.sha }}
+          IMAGE_NAME=${{ secrets.DOCKERHUB_USERNAME }}/yolo5:${{ github.sha }}
           echo "IMAGE_NAME: $IMAGE_NAME"
           docker build --push -t $IMAGE_NAME .
           echo "image build and pushed: $IMAGE_NAME"
