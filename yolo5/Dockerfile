@@ -22,8 +22,9 @@ COPY . .
 ENV AWS_REGION="eu-north-1"
 ENV SQS_QUEUE_URL="your_sqs_queue_url"
 ENV S3_BUCKET_NAME="your_s3_bucket_name"
-ENV MONGO_URI="your_mongo_uri"
-ENV POLYBOT_URL="http://polybot_service/results"
+ENV MONGO_CONNECTION_STRING=""
+# No default mongo connection string.
+ENV POLYBOT_URL="http://svc-polybot:8443/results"
 # [Optional] If you downloaded weights during build
 # ENV MODEL_PATH="/app/yolov5s.pt"
 

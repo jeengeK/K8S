@@ -5,8 +5,7 @@ import logging
 import requests
 import numpy as np
 import torch
-from pymongo import MongoClient
-import pymongo
+from pymongo import MongoClient, errors
 from PIL import Image
 import io
 import json
@@ -25,7 +24,8 @@ sqs_queue_url = os.getenv("SQS_QUEUE_URL")
 s3_bucket_name = os.getenv("S3_BUCKET_NAME")
 mongo_connection_string = os.getenv("MONGO_CONNECTION_STRING")
 polybot_url = os.getenv("POLYBOT_URL", "http://svc-polybot:8443/results")
-logging.info(f"Value of MONGO_CONNECTION_STRING from environment: '{mongo_connection_string}'") # Updated log
+
+logging.info(f"Value of MONGO_CONNECTION_STRING from environment: '{mongo_connection_string}'")
 
 # Initialize AWS clients
 sqs = boto3.client(
@@ -43,14 +43,22 @@ s3 = boto3.client(
 )
 
 # MongoDB connection
-mongo_client = MongoClient(mongo_connection_string) if mongo_connection_string else MongoClient('mongodb://mongodb-service.default.svc.cluster.local:27017/')
-db = mongo_client['yolo5_db']
-predictions_collection = db['predictions']
+if not mongo_connection_string:
+    logging.error("MONGO_CONNECTION_STRING environment variable not set.")
+    exit(1)
+
+try:
+    mongo_client = MongoClient(mongo_connection_string)
+    db = mongo_client['yolo5_db']
+    predictions_collection = db['predictions']
+    logging.info("Connected to MongoDB successfully.")
+except errors.PyMongoError as e:
+    logging.error(f"Failed to connect to MongoDB: {e}")
+    exit(1)
 
 # Load YOLOv5 model
 model = None
 try:
-    # Assuming your yolov5 directory is in the same directory as app.py
     model_path = 'yolov5'
     model = torch.hub.load(model_path, 'custom', path='yolov5s.pt', source='local')
     logging.info("YOLOv5 model loaded successfully.")
@@ -58,8 +66,7 @@ except Exception as e:
     logging.error(f"Error loading YOLOv5 model: {e}")
     model = None
 
-
-def process_sqs_message():
+def process_sqs_message(sqs_client): # added sqs_client
     """Poll SQS queue and process messages."""
     while True:
         if not sqs_queue_url:
@@ -67,21 +74,23 @@ def process_sqs_message():
             time.sleep(10)
             continue
 
-        response = sqs.receive_message(
+        logging.info("Polling SQS for messages...")
+
+        response = sqs_client.receive_message( # using sqs_client
             QueueUrl=sqs_queue_url,
             MaxNumberOfMessages=1,
-            WaitTimeSeconds=10  # Long poll for 10 seconds
+            WaitTimeSeconds=10
         )
 
         if 'Messages' in response:
+            logging.info("Messages received from SQS.")
             message = response['Messages'][0]
             receipt_handle = message['ReceiptHandle']
             try:
-                job_data = json.loads(message['Body'])  # Convert string to dictionary using json
+                job_data = json.loads(message['Body'])
             except json.JSONDecodeError:
                 logging.error(f"Error decoding SQS message body (not JSON): {message['Body']}")
-                # Optionally delete the message if it can't be decoded
-                sqs.delete_message(
+                sqs_client.delete_message( # using sqs_client
                     QueueUrl=sqs_queue_url,
                     ReceiptHandle=receipt_handle
                 )
@@ -93,16 +102,14 @@ def process_sqs_message():
             logging.info(f"Processing job for {img_name}")
 
             try:
-                # Download image from S3
                 response = s3.get_object(Bucket=s3_bucket_name, Key=img_name)
                 image_data = response['Body'].read()
 
-                # Convert image to NumPy array
                 image = Image.open(io.BytesIO(image_data)).convert('RGB')
                 image = np.array(image)
 
                 if model is not None:
-                    results = model(image)  # Perform inference
+                    results = model(image)
                     predictions = [
                         {
                             "class": int(pred[5]),
@@ -113,7 +120,6 @@ def process_sqs_message():
                         for pred in results.xyxy[0].tolist()
                     ]
 
-                    # Save results to MongoDB
                     prediction_id = str(predictions_collection.insert_one({
                         "imgName": img_name,
                         "chat_id": chat_id,
@@ -122,21 +128,18 @@ def process_sqs_message():
                     }).inserted_id)
                     logging.info(f"Prediction results saved with predictionId: {prediction_id}")
 
-                    # Send result to Polybot
                     send_results_to_polybot(prediction_id, chat_id)
                 else:
                     logging.error("Model is not loaded")
             except Exception as e:
                 logging.error(f"Error processing job {img_name}: {e}")
 
-            # Delete the message from the queue
-            sqs.delete_message(
+            sqs_client.delete_message( # using sqs_client
                 QueueUrl=sqs_queue_url,
                 ReceiptHandle=receipt_handle
             )
         else:
             logging.info("No messages in the queue. Waiting...")
-
 
 def send_results_to_polybot(prediction_id, chat_id):
     """Send the processed results to Polybot's /results endpoint."""
@@ -149,6 +152,5 @@ def send_results_to_polybot(prediction_id, chat_id):
     except requests.exceptions.RequestException as e:
         logging.error(f"Error sending results to Polybot: {e}")
 
-
 if __name__ == "__main__":
-    process_sqs_message()
+    process_sqs_message(sqs) # passing sqs
