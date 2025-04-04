@@ -5,7 +5,7 @@ on:
     branches:
      - main
     paths:
-     - 'polybotinfra/**'
+     - 'polybot/**'
 
 permissions:
   contents: write # Grant write permission to the repository contents
