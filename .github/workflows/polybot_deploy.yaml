@@ -38,10 +38,10 @@ jobs:
 
       - name: Update Argo CD Image Tag
         run: |
-          sed -i "s|image: .*|image: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/polybot:${{ github.sha }}|g" ARGOCD/polybotinfra/deployment.yaml # Adjust path if needed
+          sed -i "s|image: .*|image: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/polybot:${{ github.sha }}|g" ARGOCD/polybotinfra/polybot-deployment.yaml # Adjust path if needed
           git config --global user.email "github-actions@github.com"
           git config --global user.name "GitHub Actions"
-          git add ARGOCD/polybotinfra/deployment.yaml # Adjust path if needed
+          git add ARGOCD/polybotinfra/polybot-deployment.yaml # Adjust path if needed
           git commit -m "Update Polybot image tag to ${{ github.sha }}"
           git push origin HEAD:${{ github.ref_name }} # Push changes to the same branch.
 
