@@ -1,61 +1,46 @@
-name: yolo5 stack build-deploy
+name: Deploy YOLO5
 
 on:
   push:
     branches:
-     - main
+      - main # Or your main branch
     paths:
-     - 'yolo5/**'
-
-permissions:
-  contents: write
+      - 'yolo5/**' # Only trigger when changes are in the yolo5 folder.
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker registry
+        uses: docker/login-action@v3
         with:
-          token: ${{ secrets.REPO_TOKEN }}  # Required for pushing changes
+          registry: docker.io # Or your registry
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Install Dependencies
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./yolo5 # Path to your YOLO5 Dockerfile
+          push: true
+          tags: docker.io/${{ secrets.DOCKER_USERNAME }}/yolo5:${{ github.sha }} # Tag with commit SHA
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Configure kubectl
         run: |
-          sudo apt-get update && sudo apt-get install -y yq
+          echo "${{ secrets.KUBE_CONFIG }}" > kubeconfig.yaml
+          export KUBECONFIG=$(pwd)/kubeconfig.yaml
 
-      - name: Build and push image
-        run: |
-          DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
-          DOCKERHUB_PASSWORD=${{ secrets.DOCKERHUB_PASSWORD }}
-
-
-          if [[ -z $DOCKERHUB_USERNAME ]] || [[ -z $DOCKERHUB_PASSWORD ]]; then
-            echo DOCKERHUB_USERNAME and DOCKERHUB_PASSWORD secrets should be configured
-            exit 1
-          fi
-
-          docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
-          echo "login success"
-
-          cd yolo5
-          IMAGE_NAME=$DOCKERHUB_USERNAME/yolo5:v1.1.${{ github.run_number }}
-          docker build --push -t $IMAGE_NAME .
-          echo "image build and pushed"
-
-      - name: Update YAML manifests
-        run: |
-          cd k8s/yolo5
-          DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
-          IMAGE_NAME=$DOCKERHUB_USERNAME/yolo5:v1.1.${{ github.run_number }}
-          yq -i -y ".spec.template.spec.containers[0].image = \"$IMAGE_NAME\"" deployment.yaml
-          
-          
-
-      - name: Commit and Push changes
-        run: |
-           git config --local user.email "github@action"
-           git config --local user.name "auto-update"
-           git add k8s/yolo5/deployment.yaml
-           git commit -m "Update image to $IMAGE_NAME"
-           git pull origin main --no-rebase
-           git push origin main  
+      - name: Apply Kubernetes deployment
+        run: kubectl apply -f yolo5-deployment.yaml # your yolo5 kubernetes deployment file.
+        working-directory: ./k8s # if your yolo5 kubernetes deployment file is in a k8s folder.
