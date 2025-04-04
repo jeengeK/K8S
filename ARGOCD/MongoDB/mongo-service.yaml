@@ -3,10 +3,9 @@ kind: Service
 metadata:
   name: mongo-service
 spec:
-  clusterIP: None  # Headless service
-  ports:
-    - port: 27017
-      targetPort: 27017
-      protocol: TCP
   selector:
-    app: mongo
+    app: mongo # Make sure this matches the labels on your MongoDB pods
+  ports:
+    - protocol: TCP
+      port: 27017
+      targetPort: 27017
