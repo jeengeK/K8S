@@ -39,21 +39,23 @@ jobs:
 
       - name: Build and push Polybot Docker image
         if: github.event_name == 'push'
-        uses: docker/build-push-action@v5
-        with:
-          context: ./polybotinfra # Path to your Polybot Dockerfile (adjust if needed)
-          push: true
-          tags: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/polybot:${{ github.sha }}
+        run: |
+          cd polybotinfra
+          IMAGE_NAME=$DOCKERHUB_USERNAME/polybot:${{ github.sha }}
+          docker build --push -t $IMAGE_NAME .
+          echo "image build and pushed: $IMAGE_NAME"
 
       - name: Update Argo CD Image Tag
         if: github.event_name == 'push'
         run: |
-          sed -i "s|image: .*|image: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/polybot:${{ github.sha }}|g" ARGOCD/polybotinfra/polybot-deployment.yaml # Corrected path
+          IMAGE_NAME=$DOCKERHUB_USERNAME/polybot:${{ github.sha }}
+          sed -i "s|image: .*|image: $IMAGE_NAME|g" ARGOCD/polybotinfra/polybot-deployment.yaml
           git config --global user.email "github-actions@github.com"
           git config --global user.name "GitHub Actions"
-          git add ARGOCD/polybotinfra/polybot-deployment.yaml # Corrected path
-          git commit -m "Update Polybot image tag to ${{ github.sha }}"
-          git push origin HEAD:${{ github.ref_name }} # Push changes to the same branch.
+          git add ARGOCD/polybotinfra/polybot-deployment.yaml
+          git commit -m "Update Polybot image to ${{ github.sha }}"
+          git push origin HEAD:${{ github.ref_name }}
+          echo "Pushed updated Argo CD manifest"
 
       - name: List directory contents
         if: github.event_name == 'push'

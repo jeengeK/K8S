@@ -54,7 +54,7 @@ jobs:
           git add ARGOCD/yolo5/deployment.yaml # Corrected path
           git commit -m "Update YOLO5 image tag to ${{ github.sha }}"
           git push origin HEAD:${{ github.ref_name }} # Push changes to the same branch.
-
+          echo "Pushed updated Argo CD manifest"
       - name: List directory contents
         if: github.event_name == 'push'
         run: ls -al ARGOCD/yolo5/ # Replace with the directory containing your yaml.
