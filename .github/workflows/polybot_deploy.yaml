@@ -5,7 +5,9 @@ on:
     branches:
      - main
     paths:
-     - 'polybot/**'
+      - 'polybot/**' # Only trigger when changes are in the polybot folder.
+    issue_comment:
+      types: [ created ]
 
 permissions:
   contents: write # Grant write permission to the repository contents
