@@ -7,6 +7,9 @@ on:
     paths:
       - 'yolo5/**' # Only trigger when changes are in the yolo5 folder.
 
+permissions:
+  contents: write # Grant write permission to the repository contents
+
 jobs:
   build_and_push:
     runs-on: ubuntu-latest
