@@ -32,7 +32,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./polybotinfra # Path to your Polybot Dockerfile (adjust if needed)
+          context: ./polybot # Path to your Polybot Dockerfile (adjust if needed)
           push: true
           tags: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/polybot:${{ github.sha }}
 
