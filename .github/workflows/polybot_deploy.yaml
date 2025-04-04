@@ -26,8 +26,8 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: docker.io # Or your registry
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }} # Ensure this secret exists in GitHub
+          password: ${{ secrets.DOCKERHUB_PASSWORD }} # Ensure this secret exists in GitHub
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -38,12 +38,18 @@ jobs:
 
       - name: Update Argo CD Image Tag
         run: |
-          sed -i "s|image: .*|image: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/polybot:${{ github.sha }}|g" ARGOCD/polybot/deployment.yaml # Corrected path
+          sed -i "s|image: .*|image: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/polybot:${{ github.sha }}|g" ARGOCD/polybot/deployment.yaml # Adjust path if needed
           git config --global user.email "github-actions@github.com"
           git config --global user.name "GitHub Actions"
-          git add ARGOCD/polybot/deployment.yaml # Corrected path
+          git add ARGOCD/polybot/deployment.yaml # Adjust path if needed
           git commit -m "Update Polybot image tag to ${{ github.sha }}"
           git push origin HEAD:${{ github.ref_name }} # Push changes to the same branch.
 
       - name: List directory contents
-        run: ls -al ARGOCD/polybot/ # Replace with the directory containing your yaml.
+        run: ls -al ARGOCD/polybot/ # Adjust path if needed
+
+      # Optional: Debug secrets (remove after troubleshooting)
+      - name: Debug Secrets
+        run: |
+          echo "Checking for DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME != '' && 'Present' || 'Not Present' }}"
+          echo "Checking for DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD != '' && 'Present' || 'Not Present' }}"
