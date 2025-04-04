@@ -1,64 +1,60 @@
-name: Deploy Polybot (Argo CD)
+name: polybot stack build-deploy
 
 on:
   push:
     branches:
-      - main # Or your main branch
+     - main
     paths:
-      - 'polybotinfra/**' # Trigger when changes are in the polybotinfra folder.
-  issue_comment:
-    types: [created]
+     - 'polybot/**'
 
 permissions:
-  contents: write # Grant write permission to the repository contents
+  contents: write
 
 jobs:
-  build_and_push:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
         with:
-          token: ${{ secrets.REPO_TOKEN }} # Use REPO_TOKEN instead of GITHUB_TOKEN
+          token: ${{ secrets.REPO_TOKEN }}  # Required for pushing changes
 
-      - name: Check if comment triggers workflow
-        if: github.event_name == 'issue_comment'
-        run: echo "Workflow triggered by a comment."
-
-      - name: Set up Docker Buildx
-        if: github.event_name == 'push'
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to Docker registry
-        if: github.event_name == 'push'
+      - name: Install Dependencies
         run: |
-          echo "Attempting Docker login..."
-          docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" -p "${{ secrets.DOCKERHUB_PASSWORD }}" docker.io
-          if [ $? -eq 0 ]; then
-            echo "Docker login successful."
-          else
-            echo "Docker login failed."
+          sudo apt-get update && sudo apt-get install -y yq
+
+      - name: Build and push image
+        run: |
+          DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_PASSWORD=${{ secrets.DOCKERHUB_PASSWORD }}
+
+
+          if [[ -z $DOCKERHUB_USERNAME ]] || [[ -z $DOCKERHUB_PASSWORD ]]; then
+            echo DOCKERHUB_USERNAME and DOCKERHUB_PASSWORD secrets should be configured
             exit 1
           fi
 
-      - name: Build and push Polybot Docker image
-        if: github.event_name == 'push'
-        uses: docker/build-push-action@v5
-        with:
-          context: ./polybotinfra # Path to your Polybot Dockerfile
-          push: true
-          tags: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/polybot:${{ github.sha }}
+          docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
+          echo "login success"
 
-      - name: Update Argo CD Image Tag
-        if: github.event_name == 'push'
+          cd polybot
+          IMAGE_NAME=$DOCKERHUB_USERNAME/polybot:v1.1.${{ github.run_number }}
+          docker build --push -t $IMAGE_NAME .
+          echo "image build and pushed"
+
+      - name: Update YAML manifests
         run: |
-          sed -i "s|image: .*|image: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/polybot:${{ github.sha }}|g" ARGOCD/polybotinfra/polybot-deployment.yaml # Adjust path if needed
-          git config --global user.email "github-actions@github.com"
-          git config --global user.name "GitHub Actions"
-          git add ARGOCD/polybotinfra/polybot-deployment.yaml # Adjust path if needed
-          git commit -m "Update Polybot image tag to ${{ github.sha }}"
-          git push origin HEAD:${{ github.ref_name }}
+          DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
+          IMAGE_NAME=$DOCKERHUB_USERNAME/polybot:v1.1.${{ github.run_number }}
+          yq -i -y ".spec.template.spec.containers[0].image = \"$IMAGE_NAME\"" k8s/polybot/deployment.yaml
+          
 
-      - name: List directory contents
-        if: github.event_name == 'push'
-        run: ls -al ARGOCD/polybotinfra/ # Adjust path if needed
+      - name: Commit and Push changes
+        run: |
+           git config --local user.email "github@action"
+           git config --local user.name "auto-update"
+           git add k8s/polybot/deployment.yaml
+           git commit -m "Update image to $IMAGE_NAME"
+           git pull
+           git push origin main
+
