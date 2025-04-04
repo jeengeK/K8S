@@ -1,4 +1,4 @@
-name: Deploy Polybot
+name: Deploy Polybot (Argo CD)
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
       - 'polybot/**' # Only trigger when changes are in the polybot folder.
 
 jobs:
-  build_and_deploy:
+  build_and_push:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -31,19 +31,13 @@ jobs:
         with:
           context: ./polybot # Path to your Polybot Dockerfile
           push: true
-          tags: docker.io/${{ secrets.DOCKER_USERNAME }}/polybot:${{ github.sha }} # Tag with commit SHA
+          tags: docker.io/${{ secrets.DOCKER_USERNAME }}/polybot:${{ github.sha }}
 
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v3
-        with:
-          version: 'latest'
-
-      - name: Configure kubectl
+      - name: Update Argo CD Image Tag
         run: |
-          echo "${{ secrets.KUBE_CONFIG }}" > kubeconfig.yaml
-          export KUBECONFIG=$(pwd)/kubeconfig.yaml
-
-      - name: Update Kubernetes Deployment Image
-        run: |
-          kubectl set image deployment/polybot-deployment polybot=docker.io/${{ secrets.DOCKER_USERNAME }}/polybot:${{ github.sha }} -n default
-        working-directory: ./k8s # if your deployment yaml file is in the k8s folder.
+          sed -i "s|image: .*|image: docker.io/${{ secrets.DOCKER_USERNAME }}/polybot:${{ github.sha }}|g" ./k8s/polybot-deployment.yaml #Replace with your correct path and filename.
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "GitHub Actions"
+          git add ./k8s/polybot-deployment.yaml #Replace with your correct path and filename.
+          git commit -m "Update Polybot image tag to ${{ github.sha }}"
+          git push origin HEAD:${{ github.ref_name }} # Push changes to the same branch.
