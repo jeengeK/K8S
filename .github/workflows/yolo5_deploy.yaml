@@ -44,5 +44,5 @@ jobs:
           export KUBECONFIG=$(pwd)/kubeconfig.yaml
 
       - name: Apply Kubernetes deployment
-        run: kubectl apply -f yolo5-deployment.yaml # your yolo5 kubernetes deployment file.
+        run: kubectl apply -f deployment.yaml # your yolo5 kubernetes deployment file.
         working-directory: ./k8s # if your yolo5 kubernetes deployment file is in a k8s folder.
