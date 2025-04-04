@@ -43,6 +43,7 @@ jobs:
           echo "${{ secrets.KUBE_CONFIG }}" > kubeconfig.yaml
           export KUBECONFIG=$(pwd)/kubeconfig.yaml
 
-      - name: Apply Kubernetes deployment
-        run: kubectl apply -f deployment.yaml # your yolo5 kubernetes deployment file.
-        working-directory: ./k8s # if your yolo5 kubernetes deployment file is in a k8s folder.
+      - name: Update Kubernetes Deployment Image
+        run: |
+          kubectl set image deployment/yolo5-deployment yolo5=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/yolo5:${{ github.sha }} -n default
+        working-directory: ./k8s # if your yolo5 deployment file is in a k8s folder.
