@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: polybot-deployment
 spec:
-  replicas: 1 # Adjust as needed
+  replicas: 1
   selector:
     matchLabels:
       app: polybot
@@ -13,28 +13,30 @@ spec:
         app: polybot
     spec:
       containers:
-      - name: polybot
-        image: docker.io/jeenge/polybot:5 # Explicit docker.io
-        command: ["python", "app.py"]  # ✅ FIX: Moved command to correct indentation
-        ports:
-        - containerPort: 8443 # Or whatever port your polybot app listens on
-        env:
-        - name: TELEGRAM_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: aws-secrets-manager
-              key: telegram_token
-        - name: BUCKET_NAME
-          valueFrom:
-            secretKeyRef:
-              name: app-secrets
-              key: bucket_name
-        - name: SQS_URL
-          valueFrom:
-            secretKeyRef:
-              name: app-secrets
-              key: sqs_url
-        - name: POLYBOT_RESULTS_URL
-          value: "http://svc-polybot:8443/"
+        - name: polybot
+          image: jeenge/polybot:v1.1.9
+          command:
+            - python
+            - app.py
+          ports:
+            - containerPort: 8443
+          env:
+            - name: TELEGRAM_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: aws-secrets-manager
+                  key: telegram_token
+            - name: BUCKET_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: bucket_name
+            - name: SQS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: sqs_url
+            - name: POLYBOT_RESULTS_URL
+              value: http://svc-polybot:8443/
       imagePullSecrets:
-      - name: dockerhub-secret # Points to the dockerhub-secret
+        - name: dockerhub-secret
