@@ -1,17 +1,18 @@
-name: polybot stack build-deploy
+name: Deploy Polybot to Argo CD
 
 on:
   push:
     branches:
-     - main
+      - main
     paths:
-     - 'polybot/**'
+      - 'polybot/**'
+      - 'ARGOCD/polybotinfra/polybot-deployment.yaml' # Trigger on changes to the deployment manifest as well
 
 permissions:
   contents: write # Grant write permission to the repository contents
 
 jobs:
-  build:
+  build_and_deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,41 +24,38 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install -y yq
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker registry
+        uses: docker/login-action@v3
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
       - name: Build and push image
         run: |
-          DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
-          DOCKERHUB_PASSWORD=${{ secrets.DOCKERHUB_PASSWORD }}
-
-
-          if [[ -z $DOCKERHUB_USERNAME ]] || [[ -z $DOCKERHUB_PASSWORD ]]; then
-            echo DOCKERHUB_USERNAME and DOCKERHUB_PASSWORD secrets should be configured
-            exit 1
-          fi
-
-          docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
-          echo "login success"
-
           cd polybot
           IMAGE_NAME=$DOCKERHUB_USERNAME/polybot:v1.1.${{ github.run_number }}
           docker build --push -t $IMAGE_NAME .
-          echo "image build and pushed"
+          echo "image build and pushed: $IMAGE_NAME"
 
-      - name: Update YAML manifests
+      - name: Update Argo CD Image Tag
         run: |
-          DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
           IMAGE_NAME=$DOCKERHUB_USERNAME/polybot:v1.1.${{ github.run_number }}
-          yq -i -y ".spec.template.spec.containers[0].image = \"$IMAGE_NAME\"" ARGOCD/polybotinfra/polybot-deployment.yaml
-          
+          yq -i ".spec.template.spec.containers[0].image = \"$IMAGE_NAME\"" ARGOCD/polybotinfra/polybot-deployment.yaml
+          echo "Updated Argo CD deployment manifest with image: $IMAGE_NAME"
 
-      - name: Commit and Push changes
+      - name: Commit and Push changes to Argo CD Repo
         run: |
-           git config --local user.email "github@action"
-           git config --local user.name "auto-update"
-           git add ARGOCD/polybotinfra/polybot-deployment.yaml
-           git commit -m "Update image to $IMAGE_NAME"
-           git pull
-           git push origin main
+          git config --local user.email "github-actions@github.com"
+          git config --local user.name "GitHub Actions"
+          git add ARGOCD/polybotinfra/polybot-deployment.yaml
+          git commit -m "Update Polybot image to $IMAGE_NAME"
+          git push origin HEAD:${{ github.ref_name }} # Push to the same branch that triggered the workflow
+          echo "Pushed updated Argo CD manifest"
 
-      - name: List directory contents
+      - name: List Argo CD Manifest Contents
         if: github.event_name == 'push'
-        run: ls -al ARGOCD/polybotinfra/ # Replace with the directory containing your yaml.
+        run: ls -al ARGOCD/polybotinfra/
