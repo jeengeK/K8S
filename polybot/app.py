@@ -235,7 +235,6 @@ class Bot:
           self.send_text(chat_id, f"Error sending message to SQS: {e}")
           return
 
-
       # Removed download and send image logic.  This will be handled by Polybot callback
 
   def handle_message(self, msg):
