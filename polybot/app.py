@@ -228,8 +228,6 @@ class Bot:
           self.send_text(chat_id, "Image sent for processing.  Please wait...") # Immediate feedback
 
 
-
-
       except Exception as e:
           logger.error(f"Error sending message to SQS: {e}")
           self.send_text(chat_id, f"Error sending message to SQS: {e}")
@@ -306,11 +304,6 @@ class ObjectDetectionBot(Bot):
 
 
 
-
-
-
-
-
 # Main function to run the bot
 def main():
   bot = ObjectDetectionBot()
@@ -320,7 +313,7 @@ def main():
 
   # Delete the webhook
   try:
-      response = requests.get(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/deleteWebhook")
+      response = requests.get(f"https://api.telegam.org/bot{TELEGRAM_TOKEN}/deleteWebhook")
       response.raise_for_status()  # Raise an exception for bad status codes
       logger.info(f"Webhook deleted: {response.json()}")
   except requests.exceptions.RequestException as e:
