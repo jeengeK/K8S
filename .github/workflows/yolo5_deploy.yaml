@@ -39,11 +39,11 @@ jobs:
 
       - name: Build and push YOLO5 Docker image
         if: github.event_name == 'push'
-        uses: docker/build-push-action@v5
-        with:
-          context: ./yolo5 # Path to your YOLO5 Dockerfile (adjust if needed)
-          push: true
-          tags: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/yolo5:${{ github.sha }}
+        run: |
+          cd yolo5
+          IMAGE_NAME=$DOCKERHUB_USERNAME/yolo5:${{ github.sha }}
+          docker build --push -t $IMAGE_NAME .
+          echo "image build and pushed: $IMAGE_NAME"
 
       - name: Update Argo CD Image Tag
         if: github.event_name == 'push'
@@ -53,8 +53,10 @@ jobs:
           git config --global user.name "GitHub Actions"
           git add ARGOCD/yolo5/deployment.yaml # Corrected path
           git commit -m "Update YOLO5 image tag to ${{ github.sha }}"
+          git pull origin main --rebase
           git push origin HEAD:${{ github.ref_name }} # Push changes to the same branch.
           echo "Pushed updated Argo CD manifest"
+
       - name: List directory contents
         if: github.event_name == 'push'
         run: ls -al ARGOCD/yolo5/ # Replace with the directory containing your yaml.
