@@ -46,7 +46,7 @@ jobs:
         run: |
           DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
           IMAGE_NAME=$DOCKERHUB_USERNAME/polybot:v1.1.${{ github.run_number }}
-          yq -i -y ".spec.template.spec.containers[0].image = \"$IMAGE_NAME\"" K8S/ARGOCD/polybotinfra/polybot-deployment.yaml
+          yq -i -y ".spec.template.spec.containers[0].image = \"$IMAGE_NAME\"" /ARGOCD/polybotinfra/polybot-deployment.yaml
           
 
       - name: Commit and Push changes
