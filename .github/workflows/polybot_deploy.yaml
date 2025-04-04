@@ -42,8 +42,9 @@ jobs:
           echo "image build and pushed: $IMAGE_NAME"
 
       - name: Update Argo CD Image Tag
+        if: github.event_name == 'push'
         run: |
-          IMAGE_NAME=$DOCKERHUB_USERNAME/polybot:v1.1.${{ github.run_number }}
+          IMAGE_NAME=$DOCKERHUB_USERNAME/polybot:${{ github.run_number }}
           yq -i ".spec.template.spec.containers[0].image = \"$IMAGE_NAME\"" ARGOCD/polybotinfra/polybot-deployment.yaml
           echo "Updated Argo CD deployment manifest with image: $IMAGE_NAME"
 
