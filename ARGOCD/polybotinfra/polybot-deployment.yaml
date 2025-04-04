@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: polybot
-          image: docker.io/jeenge/polybot:f5a976e297c25e19173c1e88dca85b8612573a4b
+          image: docker.io/jeenge/polybot:2f04d7ca0a0c2f5cf91fa95f0378d1e700114a80
           command:
             - python
             - app.py
