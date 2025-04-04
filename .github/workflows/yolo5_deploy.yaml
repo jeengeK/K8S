@@ -1,18 +1,48 @@
-name: yolo5 stack build-deploy
+name: Deploy YOLO5
 
 on:
   push:
     branches:
-      - main
+      - main # Or your main branch
+    paths:
+      - 'yolo5/**' # Only trigger when changes are in the yolo5 folder.
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
-      with:
-        token: ${{ secrets.REPO_TOKEN }}
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.REPO_TOKEN }} # Use REPO_TOKEN instead of GITHUB_TOKEN
 
-    # Add other steps here
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker registry
+        uses: docker/login-action@v3
+        with:
+          registry: docker.io # Or your registry
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./yolo5 # Path to your YOLO5 Dockerfile
+          push: true
+          tags: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/yolo5:${{ github.sha }}
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Configure kubectl
+        run: |
+          echo "${{ secrets.KUBE_CONFIG }}" > kubeconfig.yaml
+          export KUBECONFIG=$(pwd)/kubeconfig.yaml
+
+      - name: Apply Kubernetes deployment
+        run: kubectl apply -f yolo5-deployment.yaml # your yolo5 kubernetes deployment file.
+        working-directory: ./k8s # if your yolo5 kubernetes deployment file is in a k8s folder.
