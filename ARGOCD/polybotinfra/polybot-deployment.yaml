@@ -26,7 +26,7 @@ spec:
                 secretKeyRef:
                   name: aws-secrets-manager
                   key: telegram_token
-            - name: BUCKET_NAME
+            - name: S3_BUCKET_NAME
               valueFrom:
                 secretKeyRef:
                   name: app-secrets

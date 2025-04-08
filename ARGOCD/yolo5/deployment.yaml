@@ -24,7 +24,7 @@ spec:
             - name: SQS_QUEUE_URL
               value: "https://sqs.eu-north-1.amazonaws.com/352708296901/itsik-netflix-events"
             - name: POLYBOT_URL
-              value: "http://svc-polybot:8443/results"
+              value: "http://svc-polybot:8443/"
             - name: AWS_REGION
               value: "eu-north-1"
             - name: MONGO_CONNECTION_STRING
