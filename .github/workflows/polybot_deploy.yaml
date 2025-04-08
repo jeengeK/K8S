@@ -53,8 +53,10 @@ jobs:
           git config --global user.name "GitHub Actions"
           git add ARGOCD/polybotinfra/polybot-deployment.yaml # Corrected path
           git commit -m "Update Polybot image tag to ${{ github.sha }}"
+          git pull --rebase origin main # Ensure we are up to date with the remote branch
           git push origin HEAD:${{ github.ref_name }} # Push changes to the same branch.
           echo "Pushed updated Argo CD manifest"
+
       - name: List directory contents
         if: github.event_name == 'push'
         run: ls -al ARGOCD/polybotinfra/ # Replace with the directory containing your yaml.
