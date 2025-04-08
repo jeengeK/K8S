@@ -15,7 +15,7 @@ import uuid  # Import uuid for generating unique IDs
 
 
 try:
-  BUCKET_NAME = os.environ.get('BUCKET_NAME')
+  BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
   SQS_URL = os.environ.get('SQS_URL')
   TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
   POLYBOT_RESULTS_URL = os.environ.get('POLYBOT_RESULTS_URL')  # URL to call back to PolyBot with results
@@ -24,7 +24,7 @@ try:
 
 
   if not BUCKET_NAME:
-      raise ValueError("BUCKET_NAME environment variable not set")
+      raise ValueError("S3_BUCKET_NAME environment variable not set")
   if not SQS_URL:
       raise ValueError("SQS_URL environment variable not set")
   if not TELEGRAM_TOKEN:
